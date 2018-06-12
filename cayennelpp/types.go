@@ -28,4 +28,14 @@ const (
 	Gyrometer = 134
 	// GPS (3 byte lon/lat 0.0001 °, 3 bytes alt 0.01 meter)
 	GPS = 136
+	// GPSNonSTD non-standard (4 bytes lon/lat)
+	GPSNonSTD = 150
+	// Altitude altitude in 4 bytes
+	Altitude = 121
+	// Direction Compass heading direction (in degrees)
+	Direction = 132
+	// StepCount step counter from pedometer
+	StepCount = 151
+	// GenericUInt16 generic UInt16 value
+	GenericUInt16 = 152
 )

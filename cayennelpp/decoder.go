@@ -24,6 +24,11 @@ type UplinkTarget interface {
 	BarometricPressure(channel uint8, hpa float32)
 	Gyrometer(channel uint8, x, y, z float32)
 	GPS(channel uint8, latitude, longitude, altitude float32)
+	GPSNonSTD(channel uint8, latitude, longitude float32)
+	Altitude(channel uint8, altitude float32)
+	Direction(channel uint8, direction float32)
+	StepCount(channel uint8, stepCount int16)
+	GenericUInt16(channel uint8, generic int16)
 }
 
 type DownlinkTarget interface {
@@ -78,6 +83,16 @@ func (d *decoder) DecodeUplink(target UplinkTarget) error {
 			err = d.decodeGyrometer(buf[0], target)
 		case GPS:
 			err = d.decodeGPS(buf[0], target)
+		case GPSNonSTD:
+			err = d.decodeGPSNonSTD(buf[0], target)
+		case Altitude:
+			err = d.decodeAltitude(buf[0], target)
+		case Direction:
+			err = d.decodeDirection(buf[0], target)
+		case StepCount:
+			err = d.decodeStepCount(buf[0], target)
+		case GenericUInt16:
+			err = d.decodeGenericUInt16(buf[0], target)
 		default:
 			err = ErrInvalidChannel
 		}
@@ -236,5 +251,64 @@ func (d *decoder) decodeGPS(channel uint8, target UplinkTarget) error {
 		float32(int32(binary.BigEndian.Uint32(latitude))>>8)/10000,
 		float32(int32(binary.BigEndian.Uint32(longitude))>>8)/10000,
 		float32(int32(binary.BigEndian.Uint32(altitude))>>8)/100)
+	return nil
+}
+
+func (d *decoder) decodeGPSNonSTD(channel uint8, target UplinkTarget) error {
+	var latitude, longitude int32
+	if err := binary.Read(d.r, binary.BigEndian, &latitude); err != nil {
+		return err
+	}
+
+	if err := binary.Read(d.r, binary.BigEndian, &longitude); err != nil {
+		return err
+	}
+
+	target.GPSNonSTD(channel, float32(latitude)/1e7, float32(longitude)/1e7)
+
+	return nil
+}
+
+func (d *decoder) decodeAltitude(channel uint8, target UplinkTarget) error {
+	var altitude int32
+	if err := binary.Read(d.r, binary.BigEndian, &altitude); err != nil {
+		return err
+	}
+
+	target.Altitude(channel, float32(altitude)/100)
+
+	return nil
+}
+
+func (d *decoder) decodeDirection(channel uint8, target UplinkTarget) error {
+	var direction int16
+	if err := binary.Read(d.r, binary.BigEndian, &direction); err != nil {
+		return err
+	}
+
+	target.Direction(channel, float32(direction)/100)
+
+	return nil
+}
+
+func (d *decoder) decodeStepCount(channel uint8, target UplinkTarget) error {
+	var stepCount int16
+	if err := binary.Read(d.r, binary.BigEndian, &stepCount); err != nil {
+		return err
+	}
+
+	target.StepCount(channel, stepCount)
+
+	return nil
+}
+
+func (d *decoder) decodeGenericUInt16(channel uint8, target UplinkTarget) error {
+	var value int16
+	if err := binary.Read(d.r, binary.BigEndian, &value); err != nil {
+		return err
+	}
+
+	target.GenericUInt16(channel, value)
+
 	return nil
 }

@@ -68,6 +68,26 @@ func (t *target) GPS(channel uint8, latitude, longitude, altitude float32) {
 	t.values[channel] = []float32{latitude, longitude, altitude}
 }
 
+func (t *target) GPSNonSTD(channel uint8, latitude, longitude float32) {
+	t.values[channel] = []float32{latitude, longitude}
+}
+
+func (t *target) Altitude(channel uint8, altitude float32) {
+	t.values[channel] = altitude
+}
+
+func (t *target) Direction(channel uint8, direction float32) {
+	t.values[channel] = direction
+}
+
+func (t *target) StepCount(channel uint8, stepCount int16) {
+	t.values[channel] = stepCount
+}
+
+func (t *target) GenericUInt16(channel uint8, generic int16) {
+	t.values[channel] = generic
+}
+
 func TestDecode(t *testing.T) {
 	a := New(t)
 

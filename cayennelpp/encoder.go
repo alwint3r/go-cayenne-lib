@@ -26,6 +26,11 @@ type Encoder interface {
 	AddBarometricPressure(channel uint8, hpa float32)
 	AddGyrometer(channel uint8, x, y, z float32)
 	AddGPS(channel uint8, latitude, longitude, meters float32)
+	AddGPSNonSTD(channel uint8, latitude, longitude float32)
+	AddAltitude(channel uint8, altitude float32)
+	AddDirection(channel uint8, direction float32)
+	AddStepCount(channel uint8, stepCount int16)
+	AddGenericUInt16(channel uint8, value int16)
 }
 
 type encoder struct {
@@ -155,4 +160,40 @@ func (e *encoder) AddGPS(channel uint8, latitude, longitude, meters float32) {
 	e.buf.WriteByte(uint8(valAlt >> 16))
 	e.buf.WriteByte(uint8(valAlt >> 8))
 	e.buf.WriteByte(uint8(valAlt))
+}
+
+func (e *encoder) AddGPSNonSTD(channel uint8, latitude, longitude float32) {
+	valLat := int32(latitude * 1e7)
+	valLon := int32(longitude * 1e7)
+
+	e.buf.WriteByte(channel)
+	e.buf.WriteByte(GPSNonSTD)
+	binary.Write(e.buf, binary.BigEndian, valLat)
+	binary.Write(e.buf, binary.BigEndian, valLon)
+}
+
+func (e *encoder) AddAltitude(channel uint8, altitude float32) {
+	val := int32(altitude * 100)
+	e.buf.WriteByte(channel)
+	e.buf.WriteByte(Altitude)
+	binary.Write(e.buf, binary.BigEndian, val)
+}
+
+func (e *encoder) AddDirection(channel uint8, direction float32) {
+	val := int16(direction * 100)
+	e.buf.WriteByte(channel)
+	e.buf.WriteByte(Direction)
+	binary.Write(e.buf, binary.BigEndian, val)
+}
+
+func (e *encoder) AddStepCount(channel uint8, step int16) {
+	e.buf.WriteByte(channel)
+	e.buf.WriteByte(StepCount)
+	binary.Write(e.buf, binary.BigEndian, step)
+}
+
+func (e *encoder) AddGenericUInt16(channel uint8, generic int16) {
+	e.buf.WriteByte(channel)
+	e.buf.WriteByte(GenericUInt16)
+	binary.Write(e.buf, binary.BigEndian, generic)
 }
